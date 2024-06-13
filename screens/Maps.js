@@ -1,38 +1,50 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MapView, { Marker } from "react-native-maps";
-// import Geolocation from "@react-native-community/geolocation";
+import * as Location from 'expo-location';
 
 const Maps = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   // Get the current position once when the component mounts
-  //   Geolocation.getCurrentPosition(
-  //     (position) => {
-  //       const { latitude, longitude } = position.coords;
-  //       setLocation({ latitude, longitude });
-  //     },
-  //     (error) => setError(error.message),
-  //     { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-  //   );
-  // }, []); // Run only once
-  
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location.coords);
+    })();
+  }, []);
+
   return (
     <View style={{ width: "100%", height: "100%" }}>
       <Text>Mapss</Text>
       <View style={styles.container}>
-        <MapView
-          style={styles.map}
-          // initialRegion={{
-          //   latitude: location.latitude,
-          //   longitude: location.longitude,
-          //   latitudeDelta: 0.0922,
-          //   longitudeDelta: 0.0421,
-          // }}
-        />
-		{/* <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} /> */}
+        {location ? (
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+              latitudeDelta: 0.01, // Decreased latitudeDelta initial zoom
+              longitudeDelta: 0.01, // Decreased longitudeDelta
+            }}
+          >
+            <Marker
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              title="You are here"
+            />
+          </MapView>
+        ) : (
+          <Text>Loading...</Text>
+        )}
       </View>
     </View>
   );

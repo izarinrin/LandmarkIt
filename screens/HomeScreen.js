@@ -21,7 +21,7 @@ const HomeScreen = ({ setScreen, _username }) => {
     <SafeAreaView style={{ flex: 1, alignItems: "center" }}>
       <View style={{ display: "flex", width: "100%" }}>
         <Header setScreenData={setScreen} username={_username}></Header>
-        {/* <Maps></Maps> */}
+        <Maps></Maps>
       </View>
       <Text style={{ textAlign: "center" }}>HOMESCREEN</Text>
       <Button
