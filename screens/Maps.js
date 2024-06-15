@@ -169,6 +169,7 @@ const Maps = () => {
     //   locCat: selected, // Assign the selected category value
     //   latitude: coords.latitude,
     //   longitude: coords.longitude,
+    //   address: markerAddress
     // };
 
     // console.log(tryinghelp);
@@ -217,6 +218,7 @@ const Maps = () => {
         locCat: selected, // Assign the selected category value
         latitude: locLat,
         longitude: locLon,
+        address: markerAddress
       })
       .then(
         (res) => {
@@ -259,6 +261,7 @@ const Maps = () => {
       <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#ccc" }}>
         <Text>{item.locName}</Text>
         <Text>{item.locCat}</Text>
+        <Text>{item.address}</Text>
       </View>
     </TouchableOpacity>
   );
