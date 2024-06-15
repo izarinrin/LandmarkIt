@@ -7,12 +7,11 @@ account upload picture<br>
 current location on login<br>
 current location on map button<br>
 add map markers<br>
-
+add and save location to map<br>
 
 [not added:]
 <br>
 <br>
-add and save location to map<br>
 review screen for admin<br>
 review scoring by users<br>
 search function<br>
