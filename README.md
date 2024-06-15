@@ -1,48 +1,22 @@
 [added:]
-
-
-
-
-register account
-
-
-login account
-
-
-account upload picture
-
-
-current location on login
-
-
-current location on map button
-
-
-add map markers
-
-
-
+<br>
+<br>
+register account<br>
+login account<br>
+account upload picture<br>
+current location on login<br>
+current location on map button<br>
+add map markers<br>
 
 
 [not added:]
-
-
-
-add and save location to map
-
-
-review screen for admin
-
-
-review scoring by users
-
-
-search function
-
-
-forget Password
-
-
-edit acc details
+<br>
+<br>
+add and save location to map<br>
+review screen for admin<br>
+review scoring by users<br>
+search function<br>
+forget Password<br>
+edit acc details<br>
 
 
