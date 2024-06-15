@@ -140,7 +140,11 @@ const Maps = () => {
               onPress={handleMarkerPress}
             >
               <Callout>
-                <Text>Add Place?</Text>
+                {isCurrent ? (
+                  <Text>You are here!</Text>
+                ) : (
+                  <Text>Add Place?</Text>
+                )}
               </Callout>
             </Marker>
             {markers.map((marker, index) => (
