@@ -28,7 +28,7 @@ const Header = ({ setScreenData }) => {
         <View >
           <Text style={styles.txtStyle}>Hi {currentUser.displayName} ! Where to?</Text>
           <Searchbar
-            placeholder="Search"
+            placeholder="※under construction※"
             onChangeText={setSearchQuery}
             value={searchQuery}
           />
