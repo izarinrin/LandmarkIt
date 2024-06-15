@@ -15,6 +15,7 @@ import UploadScreen from "./screens/UploadScreen";
 const AppBase = () => {
   const [screen, setScreen] = useState("Login");
   const [user, setUser] = useState("");
+  const [coords, setCoords] = useState(null)
   const navigation = useNavigation();
   const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,9 @@ const AppBase = () => {
   };
   const setUsername = (data) => {
     setUser(data);
+  };
+  const setLocCoords = (data) => {
+    setCoords(data);
   };
 
   return (
