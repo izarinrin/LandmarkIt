@@ -162,11 +162,11 @@ const UploadScreen = () => {
           Log Out
         </Button>
       </View>
-      <View style={[globalStyles.alignCenter, globalStyles.justifyCenter]}>
+      {/* <View style={[globalStyles.alignCenter, globalStyles.justifyCenter]}>
         <Button mode="contained" onPress={() => navigateReset("todo-screen")}>
           Todo
         </Button>
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
