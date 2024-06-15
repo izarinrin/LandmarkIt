@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Button, Card, Searchbar } from "react-native-paper";
 import { useSelector } from "react-redux";
-import { Fontisto } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Header = ({ setScreenData }) => {
@@ -27,35 +26,12 @@ const Header = ({ setScreenData }) => {
       <Card style={styles.headerMain}>
         <View >
           <Text style={styles.txtStyle}>Hi {currentUser.displayName} ! Where to?</Text>
-          <Searchbar
+          {/* <Searchbar
             placeholder="※under construction※"
             onChangeText={setSearchQuery}
             value={searchQuery}
-          />
+          /> */}
         </View>
-
-        {/* <View style={{ flex: 1, alignSelf: "flex-end" }}>
-        {/* <Button
-        //   icon="camera"
-          mode="contained"
-          onPress={() => navigation.navigate("todo-screen")}
-        >
-          Todo
-        </Button>
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate("upload-screen")}
-        >
-          Upload
-        </Button> */}
-
-        {/* <Pressable
-          style={styles.pButton}
-          onPress={() => navigateReset("login-screen")}
-        >
-          <Text>Log out</Text>
-        </Pressable> */}
-        {/* </View> */}
       </Card>
     </SafeAreaView>
   );

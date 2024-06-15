@@ -7,15 +7,24 @@ import {
   Alert,
   Modal,
   Pressable,
+  FlatList,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import MapView, { Marker, Callout } from "react-native-maps";
 import * as Location from "expo-location";
-import { Button, IconButton, TextInput, Card } from "react-native-paper";
+import {
+  Button,
+  IconButton,
+  TextInput,
+  Card,
+  Searchbar,
+} from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AddPlace from "../components/AddPlace";
 import UploadScreen from "./UploadScreen";
+import axios from "axios";
+import { SelectList } from "react-native-dropdown-select-list";
+import { database } from "../firebase/app/firebaseConfig";
 
 const Maps = () => {
   const [location, setLocation] = useState(null);
@@ -29,6 +38,23 @@ const Maps = () => {
   const [accDetsVisible, setAccDetsVisible] = useState(false);
   const [markers, setMarkers] = useState([]); // Updated state for storing markers
   const [addingMarker, setAddingMarker] = useState(false); // State to control marker addition
+  const [markerAddress, setMarkerAddress] = useState(""); // State to store address of the marker
+  const [searchQuery, setSearchQuery] = useState(""); // State for the search query
+  const [searchResults, setSearchResults] = useState([]); // State for search results
+  const [coordsToSet, setCoordsToSet] = useState(null);
+  const [selected, setSelected] = useState("");
+  const [addedLoc, setAddedLoc] = useState("");
+  const [placesVisible, setPlacesVisible] = useState(false);
+  const data = [
+    { key: "1", value: "Restaurant" },
+    { key: "2", value: "Mall" },
+    { key: "3", value: "Cafe" },
+    { key: "4", value: "Internet Cafe" },
+    { key: "5", value: "Arcade" },
+    { key: "6", value: "Activities" },
+    { key: "7", value: "Drinks" },
+  ];
+  const [list, setList] = useState([]);
 
   const fadeIn = () => {
     Animated.timing(fadeAnim, {
@@ -53,7 +79,10 @@ const Maps = () => {
     }, 3000); // Fades out after 3 seconds
   };
 
+
   useEffect(() => {
+    getAllAddedLocs();
+
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -65,15 +94,34 @@ const Maps = () => {
       setLocation(location.coords);
       setMarker(location.coords); // Set the initial marker to the current location
       setIsCurrent(true);
+      fetchAddress(location.coords.latitude, location.coords.longitude); // Fetch address for initial location
     })();
   }, []);
 
   const addMarker = (coordinate, markState) => {
     setMarker(coordinate); // Set the latest marker
+    fetchAddress(coordinate.latitude, coordinate.longitude); // Fetch address for the new marker
     setShowPlusButton(false);
     // Add marker to the array only if plus button is pressed
     if (markState) {
       setMarkers([...markers, coordinate]); // Adding the latest marker to the array
+    }
+  };
+
+  const fetchAddress = async (latitude, longitude) => {
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+      );
+      if (response.data && response.data.display_name) {
+        const address = response.data.display_name;
+        setMarkerAddress(address);
+      } else {
+        setMarkerAddress("No address found");
+      }
+    } catch (error) {
+      console.error(error);
+      setMarkerAddress("Error fetching address");
     }
   };
 
@@ -109,15 +157,123 @@ const Maps = () => {
     setModalVisible(!modalVisible);
     setAddingMarker(false);
   };
+
   const saveAddedLoc = (coords) => {
     setModalVisible(!modalVisible);
     console.log(coords);
     addMarker(coords, true); // Set to true when the plus button is pressed
     setAddingMarker(false);
+    onAddLoc(coords.latitude, coords.longitude);
+    // const tryinghelp = {
+    //   locName: addedLoc,
+    //   locCat: selected, // Assign the selected category value
+    //   latitude: coords.latitude,
+    //   longitude: coords.longitude,
+    // };
+
+    // console.log(tryinghelp);
   };
+
   const openAccDets = () => {
     setAccDetsVisible(!accDetsVisible);
   };
+
+  const handleSearch = async () => {
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          searchQuery
+        )}&format=json&limit=1`
+      );
+      if (response.data && response.data.length > 0) {
+        const result = response.data[0];
+        const coordinate = {
+          latitude: parseFloat(result.lat),
+          longitude: parseFloat(result.lon),
+        };
+        setSearchResults([coordinate]);
+        setMarker(coordinate);
+        fetchAddress(coordinate.latitude, coordinate.longitude);
+        mapRef.current.animateCamera({
+          center: coordinate,
+          zoom: 15,
+        });
+      } else {
+        Alert.alert("No results found", "Please try a different search term.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong with the search.");
+    }
+  };
+
+  const onAddLoc = (locLat, locLon) => {
+    const id = new Date().getTime();
+    database
+      .ref("addedLocs/" + id)
+      .set({
+        id: id,
+        locName: addedLoc,
+        locCat: selected, // Assign the selected category value
+        latitude: locLat,
+        longitude: locLon,
+      })
+      .then(
+        (res) => {
+          setAddedLoc("");
+        },
+        (err) => {
+          console.log({ err });
+        }
+      );
+  };
+
+  const getAllAddedLocs = () => {
+    database.ref('addedLocs').on('value', (snapshot) => {
+      var dataArray = [];
+      snapshot.forEach(function (childSnapshot) {
+        var childData = childSnapshot.val();
+        dataArray.push(childData);
+      });
+      dataArray.reverse(); //to make it descending
+      setList(dataArray)
+    }, err => {
+      console.log({ err });
+    })
+  }
+
+  const handleItemClick = (item) => {
+    console.log("Clicked item:", item);
+    // Implement your action here
+    goMapLocation(item.latitude, item.longitude);
+    const coordinate = {
+      latitude: item.latitude,
+      longitude: item.longitude,
+    };
+    addMarker(coordinate, false);
+    setPlacesVisible(!placesVisible);
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handleItemClick(item)}>
+      <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#ccc" }}>
+        <Text>{item.locName}</Text>
+        <Text>{item.locCat}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const goMapLocation = (lat, lon) => {
+    mapRef.current.animateCamera({
+      center: {
+        latitude: lat,
+        longitude: lon
+      },
+      zoom: 15,
+    });
+    fadeInOut();
+  }
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -143,7 +299,7 @@ const Maps = () => {
                 {isCurrent ? (
                   <Text>You are here!</Text>
                 ) : (
-                  <Text>Add Place?</Text>
+                  <Text>{markerAddress || "Add Place?"}</Text>
                 )}
               </Callout>
             </Marker>
@@ -159,6 +315,25 @@ const Maps = () => {
               </Marker>
             ))}
           </MapView>
+          <View
+            style={{
+              transform: [{ translateY: -30 }],
+            }}
+          >
+            <Card
+              style={{
+                padding: 5,
+              }}
+            >
+              <Searchbar
+                placeholder="Search for a location"
+                onChangeText={(query) => setSearchQuery(query)}
+                value={searchQuery}
+                onSubmitEditing={handleSearch}
+                style={styles.searchbar}
+              />
+            </Card>
+          </View>
           {showPlusButton && (
             <View
               style={{
@@ -185,7 +360,7 @@ const Maps = () => {
             >
               <View
                 style={{
-                  left: -130,
+                  left: -80,
                 }}
               >
                 <IconButton
@@ -199,7 +374,24 @@ const Maps = () => {
               </View>
               <View
                 style={{
-                  left: -35,
+                  left: -70,
+                }}
+              >
+                <IconButton
+                  icon={() => (
+                    <MaterialCommunityIcons
+                      name="exclamation-thick"
+                      size={30}
+                    />
+                  )}
+                  size={40} // Adjust the size to prevent cropping
+                  onPress={() => setPlacesVisible(true)}
+                  style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
+                />
+              </View>
+              <View
+                style={{
+                  left: -60,
                 }}
               >
                 <IconButton
@@ -220,6 +412,7 @@ const Maps = () => {
       ) : (
         <Text>Loading...</Text>
       )}
+
       <View style={styles.centeredView}>
         <Modal
           animationType="slide"
@@ -238,7 +431,36 @@ const Maps = () => {
               onPress={() => closeButton()}
               // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
             />
-            <AddPlace />
+            <View>
+              <Text
+                style={{
+                  fontSize: 30,
+                  textAlign: "center",
+                }}
+              >
+                New Place
+              </Text>
+            </View>
+            <View style={{ padding: 10 }}>
+              <View style={{ padding: 10 }}>
+                <TextInput
+                  mode="outlined"
+                  label="Location Name"
+                  dense
+                  value={addedLoc}
+                  onChangeText={setAddedLoc}
+                  style={{ flexGrow: 1 }}
+                />
+              </View>
+              <View style={{ padding: 10 }}>
+                <SelectList
+                  placeholder="Category"
+                  setSelected={(val) => setSelected(val)}
+                  data={data}
+                  save="value"
+                />
+              </View>
+            </View>
             <Button
               style={{
                 fontSize: 30,
@@ -269,6 +491,33 @@ const Maps = () => {
             // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
           />
           <UploadScreen />
+        </Modal>
+
+        <Modal
+          animationType="slide"
+          visible={placesVisible}
+          onRequestClose={() => {
+            setPlacesVisible(!placesVisible);
+          }}
+        >
+          <IconButton
+            icon={() => (
+              <MaterialCommunityIcons name="close-circle" size={30} />
+            )}
+            size={20} // Adjust the size to prevent cropping
+            onPress={() => setPlacesVisible(!placesVisible)}
+          />
+          <Card>
+            <Text
+              style={{ fontSize: 30, textAlign: "center", paddingBottom: 10 }}
+            >
+              Added Places
+            </Text>
+            <FlatList
+              data={list}
+              renderItem={renderItem}
+              keyExtractor={item => item.id} />
+          </Card>
         </Modal>
       </View>
     </SafeAreaView>
@@ -318,5 +567,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  searchbar: {
+    margin: 10,
   },
 });
