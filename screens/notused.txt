@@ -1,0 +1,47 @@
+<View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setModalVisible(!modalVisible)}
+              >
+                <Text style={styles.textStyle}>X</Text>
+              </Pressable>
+              <Card style={styles.loginContainer}>
+                <Text
+                  style={{
+                    fontSize: 30,
+                    textAlign: "center",
+                    paddingBottom: 10,
+                  }}
+                >
+                  New Place
+                </Text>
+
+                <View style={{ padding: 10 }}>
+                  <TextInput
+                    mode="outlined"
+                    label="Email"
+                  />
+                  <TextInput
+                    mode="outlined"
+                    label="Display Name"
+                  />
+                  <TextInput
+                    mode="outlined"
+                    secureTextEntry={true}
+                    label="Password"
+                  />
+                </View>
+                <Button
+                  style={{
+                    fontSize: 30,
+                    textAlign: "center",
+                  }}
+                  mode="contained"
+                  onPress={() => alert('debug')}
+                >
+                  Add
+                </Button>
+              </Card>
+            </View>
+          </View>
