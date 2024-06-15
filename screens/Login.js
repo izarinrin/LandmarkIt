@@ -103,7 +103,7 @@ const Login = ({ setScreen }) => {
   };
 
   const clickForgotPass = () => {
-    alert("Forgot Pass");
+    alert("※under construction※");
   };
 
   const clickReg = () => {
@@ -163,7 +163,7 @@ const Login = ({ setScreen }) => {
                     paddingBottom: 10,
                   }}
                 >
-                  resgister
+                  Register
                 </Text>
 
                 <View style={{ padding: 10 }}>
