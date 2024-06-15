@@ -15,6 +15,7 @@ import { Button, IconButton, TextInput, Card } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddPlace from "../components/AddPlace";
+import UploadScreen from "./UploadScreen";
 
 const Maps = () => {
   const [location, setLocation] = useState(null);
@@ -25,6 +26,9 @@ const Maps = () => {
   const [isCurrent, setIsCurrent] = useState(false);
   const mapRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [accDetsVisible, setAccDetsVisible] = useState(false);
+  const [markers, setMarkers] = useState([]); // Updated state for storing markers
+  const [addingMarker, setAddingMarker] = useState(false); // State to control marker addition
 
   const fadeIn = () => {
     Animated.timing(fadeAnim, {
@@ -64,9 +68,13 @@ const Maps = () => {
     })();
   }, []);
 
-  const addMarker = (coordinate) => {
+  const addMarker = (coordinate, markState) => {
     setMarker(coordinate); // Set the latest marker
     setShowPlusButton(false);
+    // Add marker to the array only if plus button is pressed
+    if (markState) {
+      setMarkers([...markers, coordinate]); // Adding the latest marker to the array
+    }
   };
 
   const centerMapOnLocation = () => {
@@ -81,23 +89,34 @@ const Maps = () => {
       });
       fadeInOut(); // Call fadeInOut when centering on the current location
     }
-    addMarker(location);
+    addMarker(location, false);
   };
 
   const handleMarkerPress = () => {
     setIsCurrent(false);
     setShowPlusButton(true);
+    // setAddingMarker(true); // Set to true when the marker is pressed
   };
 
   const handlePlusButtonPress = () => {
     // Add your functionality here
-    // console.log("Plus button pressed");
+    console.log("Plus button pressed");
     setShowPlusButton(false);
-    addLocation();
+    setModalVisible(!modalVisible);
   };
 
-  const addLocation = () => {
+  const closeButton = () => {
     setModalVisible(!modalVisible);
+    setAddingMarker(false);
+  };
+  const saveAddedLoc = (coords) => {
+    setModalVisible(!modalVisible);
+    console.log(coords);
+    addMarker(coords, true); // Set to true when the plus button is pressed
+    setAddingMarker(false);
+  };
+  const openAccDets = () => {
+    setAccDetsVisible(!accDetsVisible);
   };
 
   return (
@@ -115,21 +134,30 @@ const Maps = () => {
             }}
             onPress={(e) => addMarker(e.nativeEvent.coordinate)}
           >
-            {marker && ( // Render the custom marker if it exists
+            <Marker
+              coordinate={marker}
+              title="Custom Marker"
+              onPress={handleMarkerPress}
+            >
+              <Callout>
+                {isCurrent ? (
+                  <Text>You are here!</Text>
+                ) : (
+                  <Text>Add Place?</Text>
+                )}
+              </Callout>
+            </Marker>
+            {markers.map((marker, index) => (
               <Marker
+                key={index}
                 coordinate={marker}
-                title="Custom Marker"
-                onPress={handleMarkerPress}
+                title={`Marker ${index + 1}`}
               >
                 <Callout>
-                  {isCurrent ? (
-                    <Text>You are here</Text>
-                  ) : (
-                    <Text>Add Place?</Text>
-                  )}
+                  <Text>{`Marker ${index + 1}`}</Text>
                 </Callout>
               </Marker>
-            )}
+            ))}
           </MapView>
           {showPlusButton && (
             <View
@@ -144,7 +172,7 @@ const Maps = () => {
               <IconButton
                 icon={() => <MaterialCommunityIcons name="plus" size={30} />}
                 size={40} // Adjust the size to prevent cropping
-                onPress={() => handlePlusButtonPress()}
+                onPress={() => handlePlusButtonPress(markers, addingMarker)}
                 style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
               />
             </View>
@@ -152,26 +180,47 @@ const Maps = () => {
           <View style={styles.buttonContainer}>
             <View
               style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
+                flexDirection: "row",
               }}
             >
-              <IconButton
-                icon={() => (
-                  <MaterialCommunityIcons name="map-marker-circle" size={30} />
-                )}
-                size={40} // Adjust the size to prevent cropping
-                onPress={() => centerMapOnLocation()}
-                style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
-              />
+              <View
+                style={{
+                  left: -130,
+                }}
+              >
+                <IconButton
+                  icon={() => (
+                    <MaterialCommunityIcons name="account-details" size={30} />
+                  )}
+                  size={40} // Adjust the size to prevent cropping
+                  onPress={() => openAccDets()}
+                  style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
+                />
+              </View>
+              <View
+                style={{
+                  left: -35,
+                }}
+              >
+                <IconButton
+                  icon={() => (
+                    <MaterialCommunityIcons
+                      name="map-marker-circle"
+                      size={30}
+                    />
+                  )}
+                  size={40} // Adjust the size to prevent cropping
+                  onPress={() => centerMapOnLocation()}
+                  style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
+                />
+              </View>
             </View>
           </View>
         </>
       ) : (
         <Text>Loading...</Text>
       )}
-      <Card style={styles.centeredView}>
+      <View style={styles.centeredView}>
         <Modal
           animationType="slide"
           transparent={true}
@@ -181,18 +230,47 @@ const Maps = () => {
           }}
         >
           <Card style={styles.modalView}>
-          <IconButton
-                icon={() => (
-                  <MaterialCommunityIcons name="close-circle" size={30} />
-                )}
-                size={20} // Adjust the size to prevent cropping
-                onPress={() => setModalVisible(!modalVisible)}
-                // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
-              />
+            <IconButton
+              icon={() => (
+                <MaterialCommunityIcons name="close-circle" size={30} />
+              )}
+              size={20} // Adjust the size to prevent cropping
+              onPress={() => closeButton()}
+              // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
+            />
             <AddPlace />
+            <Button
+              style={{
+                fontSize: 30,
+                textAlign: "center",
+              }}
+              mode="contained"
+              onPress={() => saveAddedLoc(marker)}
+            >
+              Add
+            </Button>
           </Card>
         </Modal>
-      </Card>
+      </View>
+      <View>
+        <Modal
+          animationType="slide"
+          visible={accDetsVisible}
+          onRequestClose={() => {
+            setAccDetsVisible(!accDetsVisible);
+          }}
+        >
+          <IconButton
+            icon={() => (
+              <MaterialCommunityIcons name="close-circle" size={30} />
+            )}
+            size={20} // Adjust the size to prevent cropping
+            onPress={() => setAccDetsVisible(!accDetsVisible)}
+            // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
+          />
+          <UploadScreen />
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 };
@@ -224,5 +302,21 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: "center",
     alignItems: "center",
+  },
+  centeredView: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  modalView: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
