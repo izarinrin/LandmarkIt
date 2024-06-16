@@ -79,7 +79,6 @@ const Maps = () => {
     }, 3000); // Fades out after 3 seconds
   };
 
-
   useEffect(() => {
     getAllAddedLocs();
 
@@ -218,7 +217,7 @@ const Maps = () => {
         locCat: selected, // Assign the selected category value
         latitude: locLat,
         longitude: locLon,
-        address: markerAddress
+        address: markerAddress,
       })
       .then(
         (res) => {
@@ -231,18 +230,22 @@ const Maps = () => {
   };
 
   const getAllAddedLocs = () => {
-    database.ref('addedLocs').on('value', (snapshot) => {
-      var dataArray = [];
-      snapshot.forEach(function (childSnapshot) {
-        var childData = childSnapshot.val();
-        dataArray.push(childData);
-      });
-      dataArray.reverse(); //to make it descending
-      setList(dataArray)
-    }, err => {
-      console.log({ err });
-    })
-  }
+    database.ref("addedLocs").on(
+      "value",
+      (snapshot) => {
+        var dataArray = [];
+        snapshot.forEach(function (childSnapshot) {
+          var childData = childSnapshot.val();
+          dataArray.push(childData);
+        });
+        dataArray.reverse(); //to make it descending
+        setList(dataArray);
+      },
+      (err) => {
+        console.log({ err });
+      }
+    );
+  };
 
   const handleItemClick = (item) => {
     console.log("Clicked item:", item);
@@ -258,10 +261,33 @@ const Maps = () => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleItemClick(item)}>
-      <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#ccc" }}>
-        <Text>{item.locName}</Text>
+      <View
+        style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#ccc" }}
+      >
+        <Text >{item.locName}</Text>
         <Text>{item.locCat}</Text>
         <Text>{item.address}</Text>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: 10,
+          }}
+        >
+          <IconButton
+            icon={() => <MaterialCommunityIcons name="trash-can" size={30} />}
+            size={30} // Adjust the size to prevent cropping
+            onPress={() => onDelete(item)}
+            style={{ backgroundColor: "#ff6f69", borderRadius: 15 }} // Adjust color and borderRadius as needed
+          />
+          <IconButton
+            icon={() => <MaterialCommunityIcons name="pencil" size={30} />}
+            size={30} // Adjust the size to prevent cropping
+            onPress={() => onUpdate(item)}
+            style={{ backgroundColor: "#c58fff", borderRadius: 15 }} // Adjust color and borderRadius as needed
+          />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -270,13 +296,27 @@ const Maps = () => {
     mapRef.current.animateCamera({
       center: {
         latitude: lat,
-        longitude: lon
+        longitude: lon,
       },
       zoom: 15,
     });
     fadeInOut();
-  }
+  };
 
+  const onUpdate = (item) => {
+    let updates = {};
+    updates["addedLocs/" + item.id] = item;
+    database.ref().update(updates, (completed) => {
+      // todo after completed
+    });
+  };
+
+  const onDelete = (item) => {
+    let ref = database.ref(`addedLocs/${item.id}`);
+    ref.remove((completed) => {
+      // todo after completed
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -519,7 +559,8 @@ const Maps = () => {
             <FlatList
               data={list}
               renderItem={renderItem}
-              keyExtractor={item => item.id} />
+              keyExtractor={(item) => item.id}
+            />
           </Card>
         </Modal>
       </View>
