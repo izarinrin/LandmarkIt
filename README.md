@@ -8,6 +8,7 @@ current location on login<br>
 current location on map button<br>
 add map markers<br>
 add and save location to map<br>
+update & delete on palces<br>
 
 [not added:]
 <br>
