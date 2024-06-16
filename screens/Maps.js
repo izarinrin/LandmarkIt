@@ -45,6 +45,9 @@ const Maps = () => {
   const [selected, setSelected] = useState("");
   const [addedLoc, setAddedLoc] = useState("");
   const [placesVisible, setPlacesVisible] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null)
+
   const data = [
     { key: "1", value: "Restaurant" },
     { key: "2", value: "Mall" },
@@ -264,7 +267,7 @@ const Maps = () => {
       <View
         style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: "#ccc" }}
       >
-        <Text >{item.locName}</Text>
+        <Text>{item.locName}</Text>
         <Text>{item.locCat}</Text>
         <Text>{item.address}</Text>
 
@@ -284,7 +287,7 @@ const Maps = () => {
           <IconButton
             icon={() => <MaterialCommunityIcons name="pencil" size={30} />}
             size={30} // Adjust the size to prevent cropping
-            onPress={() => onUpdate(item)}
+            onPress={() => handleUpdate(item)}
             style={{ backgroundColor: "#c58fff", borderRadius: 15 }} // Adjust color and borderRadius as needed
           />
         </View>
@@ -304,12 +307,23 @@ const Maps = () => {
   };
 
   const onUpdate = (item) => {
+    item.locName = addedLoc
+    item.locCat = selected
     let updates = {};
     updates["addedLocs/" + item.id] = item;
     database.ref().update(updates, (completed) => {
       // todo after completed
     });
+    setModalVisible(!modalVisible);
+    setIsUpdating(false);
+    // console.log("item: ", item);
   };
+
+  const handleUpdate = (item) => {
+    setCurrentItem(item)
+    setModalVisible(!modalVisible);
+    setIsUpdating(true);
+  }
 
   const onDelete = (item) => {
     let ref = database.ref(`addedLocs/${item.id}`);
@@ -475,14 +489,25 @@ const Maps = () => {
               // style={{ backgroundColor: "#c58fff", borderRadius: 20 }} // Adjust color and borderRadius as needed
             />
             <View>
-              <Text
-                style={{
-                  fontSize: 30,
-                  textAlign: "center",
-                }}
-              >
-                New Place
-              </Text>
+              {isUpdating ? (
+                <Text
+                  style={{
+                    fontSize: 30,
+                    textAlign: "center",
+                  }}
+                >
+                  Update Details
+                </Text>
+              ) : (
+                <Text
+                  style={{
+                    fontSize: 30,
+                    textAlign: "center",
+                  }}
+                >
+                  New Place
+                </Text>
+              )}
             </View>
             <View style={{ padding: 10 }}>
               <View style={{ padding: 10 }}>
@@ -504,16 +529,29 @@ const Maps = () => {
                 />
               </View>
             </View>
-            <Button
-              style={{
-                fontSize: 30,
-                textAlign: "center",
-              }}
-              mode="contained"
-              onPress={() => saveAddedLoc(marker)}
-            >
-              Add
-            </Button>
+            {isUpdating ? (
+              <Button
+                style={{
+                  fontSize: 30,
+                  textAlign: "center",
+                }}
+                mode="contained"
+                onPress={() => onUpdate(currentItem)}
+              >
+                Update
+              </Button>
+            ) : (
+              <Button
+                style={{
+                  fontSize: 30,
+                  textAlign: "center",
+                }}
+                mode="contained"
+                onPress={() => saveAddedLoc(marker)}
+              >
+                Add
+              </Button>
+            )}
           </Card>
         </Modal>
       </View>
